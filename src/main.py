@@ -17,11 +17,11 @@ import os
 
 # 加载数据
 # 修改了文件夹的内容，文件夹内包含所有数据集。
-images_file_path = '..\\..\\Datasets\\ISIC2016\\ISBI2016_ISIC_Part1_Training_Data\\*jpg'
-masks_file_path = '..\\..\\Datasets\\ISIC2016\\ISBI2016_ISIC_Part1_Training_GroundTruth\\*.png'
+images_file_path = '../../Datasets/ISIC2016/ISBI2016_ISIC_Part1_Training_Data/*jpg'
+masks_file_path = '../../Datasets/ISIC2016/ISBI2016_ISIC_Part1_Training_GroundTruth/*.png'
 
-# images_file_path = "..\\..\\Datasets\\Oxford-IIIT Pet\\images\\*jpg"
-# masks_file_path = "..\\..\\Datasets\\Oxford-IIIT Pet\\annotations\\trimaps\\*.png"
+# images_file_path = "../../Datasets/Oxford-IIIT Pet/images/*jpg"
+# masks_file_path = "../../Datasets/Oxford-IIIT Pet/annotations/trimaps/*.png"
 
 images_path = glob.glob(images_file_path)
 masks_path = glob.glob(masks_file_path)
@@ -34,7 +34,7 @@ print('数据集个数:', len(images_path),
 # 数据集个数: 1279 训练集个数: 1023 测试集个数: 256
 
 # 超参数
-batch_size = 16
+batch_size = 2  # 公司电脑只能 <= 2
 epochs = 5
 buffer_size = train_count
 steps_per_epoch = train_count // batch_size
@@ -68,6 +68,7 @@ train_dataset, test_dataset, train, test = data.distribute(images_path, masks_pa
 
 # 加载模型
 model = MyModel
+
 
 # -------------dice损失函数-------------
 # smooth = 1e-7  # 用于防止分母为0.
@@ -111,7 +112,7 @@ class DisplayCallback(tf.keras.callbacks.Callback):
 
 
 # 训练模型 问题batch size打开会报错
-history = MyModel.fit(
+history = model.fit(
     # image_gen_train.flow(train_dataset, batch_size=batch_size),
     train_dataset,
     # batch_size=batch_size,

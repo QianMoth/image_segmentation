@@ -1,6 +1,6 @@
 import tensorflow as tf
 import glob
-import Program.data as data
+import src.data as data
 import Program.show as show
 import Program.model as MYMODEL
 from tensorflow_examples.models.pix2pix import pix2pix
