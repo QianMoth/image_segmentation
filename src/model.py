@@ -10,7 +10,7 @@ class DoubleConv(layers.Layer):
         # self.BN1 = layers.BatchNormalization(axis=3)
         self.conv2 = layers.Conv2D(filter_size, 3, padding='same', activation='relu')
         self.BN2 = layers.BatchNormalization(axis=3)
-        self.drop = layers.Dropout(0.2)
+        self.drop = layers.Dropout(0.7)
 
     def call(self, inputs, **kwargs):
         l = self.conv1(inputs)
@@ -21,34 +21,34 @@ class DoubleConv(layers.Layer):
         return l
 
 
-# Attention输入两个值，输出一个值
-class AttentionBlock(layers.Layer):
-    def __init__(self, F_g, F_l, F_int):
-        super(AttentionBlock, self).__init__()
-        self.W_g = tf.keras.Sequential(
-            layers.Conv2D(F_g, F_int, kernel_size=1, stride=1, padding=0, bias=True),
-            layers.BatchNormalization(F_int)
-        )
-
-        self.W_x = tf.keras.Sequential(
-            layers.Conv2D(F_l, F_int, kernel_size=1, stride=1, padding=0, bias=True),
-            layers.BatchNormalization(F_int)
-        )
-
-        self.psi = tf.keras.Sequential(
-            layers.Conv2D(F_int, 1, kernel_size=1, stride=1, padding=0, bias=True, activation='sigmoid'),
-            layers.BatchNormalization(1),
-        )
-
-        self.relu = layers.ReLU(inplace=True)
-
-    def call(self, g, x, **kwargs):
-        g1 = self.W_g(g)
-        x1 = self.W_x(x)
-        psi = self.relu(layers.concatenate([g1, x1], axis=3))
-        # psi = self.relu(g1 + x1)
-        psi = self.psi(psi)
-        return x * psi
+# # Attention输入两个值，输出一个值
+# class AttentionBlock(layers.Layer):
+#     def __init__(self, F_g, F_l, F_int):
+#         super(AttentionBlock, self).__init__()
+#         self.W_g = tf.keras.Sequential(
+#             layers.Conv2D(F_g, F_int, kernel_size=1, stride=1, padding=0, bias=True),
+#             layers.BatchNormalization(F_int)
+#         )
+#
+#         self.W_x = tf.keras.Sequential(
+#             layers.Conv2D(F_l, F_int, kernel_size=1, stride=1, padding=0, bias=True),
+#             layers.BatchNormalization(F_int)
+#         )
+#
+#         self.psi = tf.keras.Sequential(
+#             layers.Conv2D(F_int, 1, kernel_size=1, stride=1, padding=0, bias=True, activation='sigmoid'),
+#             layers.BatchNormalization(1),
+#         )
+#
+#         self.relu = layers.ReLU(inplace=True)
+#
+#     def call(self, g, x, **kwargs):
+#         g1 = self.W_g(g)
+#         x1 = self.W_x(x)
+#         psi = self.relu(layers.concatenate([g1, x1], axis=3))
+#         # psi = self.relu(g1 + x1)
+#         psi = self.psi(psi)
+#         return x * psi
 
 
 class UNet(Model):

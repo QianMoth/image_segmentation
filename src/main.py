@@ -34,8 +34,10 @@ print('数据集个数:', len(images_path),
 # 数据集个数: 1279 训练集个数: 1023 测试集个数: 256
 
 # 超参数
-batch_size = 2  # 公司电脑只能 <= 2
-epochs = 5
+batch_size = 25
+# 公司电脑只能 <= 2
+# 学校电脑 <=25, 32不行其余没测试过
+epochs = 15
 buffer_size = train_count
 steps_per_epoch = train_count // batch_size
 validation_steps = 1
@@ -48,6 +50,7 @@ train_dataset, test_dataset, train, test = data.distribute(images_path, masks_pa
 # train_dataset:  <PrefetchDataset shapes: ((None, 256, 256, 3), (None, 256, 256, 1)), types: (tf.float32, tf.float32)>
 # test_dataset:   <BatchDataset shapes: ((None, 256, 256, 3), (None, 256, 256, 1)), types: (tf.float32, tf.float32)>
 
+# 看一下数据加载是否正常
 # sample_image, sample_mask = [], []
 # for image, mask in train.take(1):
 #     sample_image, sample_mask = image, mask
@@ -92,23 +95,23 @@ model.compile(optimizer='adam',
               loss=dice_coef_loss,
               metrics=["binary_accuracy", dice_coef])
 
-# 断点续训
-checkpoint_save_path = "./data/checkpoint/MyModel.ckpt"  # 导出数据路径
-# 读取模型，判断是否存在文件
-if os.path.exists(checkpoint_save_path + '.index'):
-    print('-------------下载模型-------------')
-    model.load_weights(checkpoint_save_path)
-# 保存模型
-cp_callback = callbacks.ModelCheckpoint(filepath=checkpoint_save_path,
-                                        save_weights_only=True,
-                                        save_best_only=True)
-
-
-class DisplayCallback(tf.keras.callbacks.Callback):
-    def on_epoch_end(self, epoch, logs=None):
-        # clear_output(wait=True)  # 每次输出图像前关闭上一次
-        show.show_predictions(checkpoint_save_path, test_dataset)
-        # print('\nSample Prediction after epoch {}\n'.format(epoch + 1))
+# # 断点续训
+# checkpoint_save_path = "./data/checkpoint/MyModel.ckpt"  # 导出数据路径
+# # 读取模型，判断是否存在文件
+# if os.path.exists(checkpoint_save_path + '.index'):
+#     print('-------------下载模型-------------')
+#     model.load_weights(checkpoint_save_path)
+# # 保存模型
+# cp_callback = callbacks.ModelCheckpoint(filepath=checkpoint_save_path,
+#                                         save_weights_only=True,
+#                                         save_best_only=True)
+#
+#
+# class DisplayCallback(tf.keras.callbacks.Callback):
+#     def on_epoch_end(self, epoch, logs=None):
+#         # clear_output(wait=True)  # 每次输出图像前关闭上一次
+#         show.show_predictions(checkpoint_save_path, test_dataset)
+#         # print('\nSample Prediction after epoch {}\n'.format(epoch + 1))
 
 
 # 训练模型 问题batch size打开会报错
@@ -120,24 +123,14 @@ history = model.fit(
     steps_per_epoch=steps_per_epoch,
     validation_data=test_dataset,
     validation_steps=validation_steps,
-    callbacks=[cp_callback, DisplayCallback()]
+    # callbacks=[cp_callback, DisplayCallback()]
 )
 
 # 不同图片展示
-# show.show_predictions(checkpoint_save_path, test_dataset, num=5)、
+# show.show_predictions(checkpoint_save_path, test_dataset, num=5)
 
 # 模型结构展示
 model.summary()
-
-# # 导出训练的权重值，数据量太大了，千万不要打开。
-# np.set_printoptions(threshold=sys.maxsize)  # 设置print输出格式
-# # print(MyModel.trainable_variables)
-# file = open('./data/weight.txt', 'w')
-# for i in MyModel.trainable_variables:
-#     file.write(str(i.name) + '\n')
-#     file.write(str(i.shape) + '\n')
-#     file.write(str(i.numpy()) + '\n')
-# file.close()
 
 # 可视化
 # 显示train和test的acc和loss曲线
