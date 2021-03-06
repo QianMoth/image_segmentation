@@ -3,7 +3,7 @@
 # coding = UTF-8
 
 import data
-from model import MyModel
+from networks import MyModel
 import show
 
 import tensorflow as tf
@@ -11,17 +11,10 @@ from tensorflow.keras import callbacks, backend
 import glob
 import os
 
-# tf.data.Dataset.flat_map(
-#     lambda t:
-#     tf.data.Dataset.from_tensors(t).repeat(e))
-
 # 加载数据
 # 修改了文件夹的内容，文件夹内包含所有数据集。
-images_file_path = '../../Datasets/ISIC2016/ISBI2016_ISIC_Part1_Training_Data/*jpg'
-masks_file_path = '../../Datasets/ISIC2016/ISBI2016_ISIC_Part1_Training_GroundTruth/*.png'
-
-# images_file_path = "../../Datasets/Oxford-IIIT Pet/images/*jpg"
-# masks_file_path = "../../Datasets/Oxford-IIIT Pet/annotations/trimaps/*.png"
+images_file_path = '../Datasets/ISIC2016/ISBI2016_ISIC_Part1_Training_Data/*jpg'
+masks_file_path = '../Datasets/ISIC2016/ISBI2016_ISIC_Part1_Training_GroundTruth/*.png'
 
 images_path = glob.glob(images_file_path)
 masks_path = glob.glob(masks_file_path)

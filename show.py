@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import tensorflow as tf
-from model import MyModel
+from networks import MyModel
 
 
 # 图片展示，未来可能会加自动保存、自动关闭
