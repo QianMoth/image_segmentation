@@ -99,8 +99,11 @@ def att_QianNet(input_size=(256, 256, 1)):
     print("conv7: ", conv7)
 
     up8 = Conv2DTranspose(256, kernel_size=2, strides=2, padding='same', kernel_initializer='he_normal')(conv7)
+    print("up8: ", up8)
     skip8 = attentionGate(64, up8, conv1)
+    print("skip8: ", skip8)
     conv8 = DoubleConv(64, skip8)
+    print("conv8: ", conv8)
 
     conv9 = Conv2D(2, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv8)
     print("conv9: ", conv9)
