@@ -1,6 +1,5 @@
 import tensorflow as tf
 from tensorflow.keras import layers, Model
-from tensorflow.keras import backend as K
 
 
 # 如果无特定必要，尽可能避免使用Model子类化的方式构建模型，这种方式提供了极大的灵活性，但也有更大的概率出错。

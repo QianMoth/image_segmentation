@@ -1,36 +1,10 @@
-from __future__ import division
-import numpy as np
-from tensorflow.keras import Model, layers
-from tensorflow.keras import backend as K
-from tensorflow.keras.optimizers import *
+from tensorflow.keras import Model
 from tensorflow.keras.layers import *
-import tensorflow as tf
+from models.layers.Conv import DoubleConv
+from models.layers.Skip import BConvLSTMSkip, attentionGate
 
 
-def DoubleConv(filter_size, inputs):
-    conv1 = layers.Conv2D(filter_size, 3, padding='same', activation='relu', kernel_initializer='he_normal')(inputs)
-    # BN1 = layers.BatchNormalization(axis=3)(conv1)
-    conv2 = layers.Conv2D(filter_size, 3, padding='same', activation='relu', kernel_initializer='he_normal')(conv1)
-    BN2 = layers.BatchNormalization(axis=3)(conv2)
-    drop = layers.Dropout(0.5)(BN2)
-    return drop
-
-
-def LSTMSkip(filter_size, inputs, skips):
-    BN = BatchNormalization(axis=3)(inputs)
-    relu = Activation('relu')(BN)
-
-    size = np.int32((256 * 64) / filter_size)
-    x1 = Reshape(target_shape=(1, size, size, filter_size))(relu)
-    x2 = Reshape(target_shape=(1, size, size, filter_size))(skips)
-    merge = concatenate([x1, x2], axis=1)
-    merge = ConvLSTM2D(filters=filter_size // 2, kernel_size=(3, 3), padding='same', return_sequences=False,
-                       go_backwards=True, kernel_initializer='he_normal')(merge)
-
-    return merge
-
-
-def BCDU_net(input_size=(256, 256, 1)):
+def BSC_QianNet(input_size=(256, 256, 1)):
     # N = input_size[0]
     inputs = Input(input_size)
     conv1 = DoubleConv(64, inputs)
@@ -40,6 +14,7 @@ def BCDU_net(input_size=(256, 256, 1)):
     conv3 = DoubleConv(256, pool2)
     drop3 = Dropout(0.5)(conv3)
     pool3 = MaxPooling2D(pool_size=(2, 2))(drop3)
+
     # D1
     conv4_1 = DoubleConv(512, pool3)
     drop4_1 = Dropout(0.5)(conv4_1)
@@ -51,20 +26,86 @@ def BCDU_net(input_size=(256, 256, 1)):
     conv4_3 = DoubleConv(512, merge_dense)
     drop4_3 = Dropout(0.5)(conv4_3)
 
-    up6 = Conv2DTranspose(256, kernel_size=2, strides=2, padding='same', kernel_initializer='he_normal')(drop4_3)
-    skip6 = LSTMSkip(256, up6, conv3)
+    up6 = Conv2DTranspose(256, kernel_size=2, strides=2, padding='same', kernel_initializer='he_normal',
+                          activation='relu')(drop4_3)
+    BN6 = BatchNormalization(axis=3)(up6)
+    skip6 = BConvLSTMSkip(256, BN6, conv3)
     conv6 = DoubleConv(256, skip6)
 
-    up7 = Conv2DTranspose(128, kernel_size=2, strides=2, padding='same', kernel_initializer='he_normal')(conv6)
-    skip7 = LSTMSkip(128, up7, conv2)
+    up7 = Conv2DTranspose(128, kernel_size=2, strides=2, padding='same', kernel_initializer='he_normal',
+                          activation='relu')(conv6)
+    BN7 = BatchNormalization(axis=3)(up7)
+    skip7 = BConvLSTMSkip(128, BN7, conv3)
     conv7 = DoubleConv(128, skip7)
 
-    up8 = Conv2DTranspose(64, kernel_size=2, strides=2, padding='same', kernel_initializer='he_normal')(conv7)
-    skip8 = LSTMSkip(64, up8, conv1)
+    up8 = Conv2DTranspose(64, kernel_size=2, strides=2, padding='same', kernel_initializer='he_normal',
+                          activation='relu')(conv7)
+    BN8 = BatchNormalization(axis=3)(up8)
+    skip8 = BConvLSTMSkip(64, BN8, conv3)
     conv8 = DoubleConv(64, skip8)
 
     conv9 = Conv2D(2, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv8)
     conv10 = Conv2D(1, 1, activation='sigmoid')(conv9)
+
+    model = Model(inputs, conv10)
+    return model
+
+
+def att_QianNet(input_size=(256, 256, 1)):
+    # N = input_size[0]
+    inputs = Input(input_size)
+    print("inputs: ", inputs)
+    conv1 = DoubleConv(64, inputs)
+    print("conv1: ", conv1)
+    pool1 = MaxPooling2D(pool_size=(2, 2))(conv1)
+    print("pool1: ", pool1)
+    conv2 = DoubleConv(128, pool1)
+    print("conv2: ", conv2)
+    pool2 = MaxPooling2D(pool_size=(2, 2))(conv2)
+    print("pool2: ", pool2)
+    conv3 = DoubleConv(256, pool2)
+    print("conv3: ", conv3)
+    drop3 = Dropout(0.5)(conv3)
+    print("drop3: ", drop3)
+    pool3 = MaxPooling2D(pool_size=(2, 2))(drop3)
+    print("pool3: ", pool3)
+    print("=========encoder end========")
+    # D1
+    conv4_1 = DoubleConv(512, pool3)
+    drop4_1 = Dropout(0.5)(conv4_1)
+    print("drop4_1: ", drop4_1)
+    # D2
+    conv4_2 = DoubleConv(512, drop4_1)
+    drop4_2 = Dropout(0.5)(conv4_2)
+    print("drop4_2: ", drop4_2)
+    # D3
+    merge_dense = concatenate([drop4_2, drop4_1], axis=3)
+    conv4_3 = DoubleConv(512, merge_dense)
+    drop4_3 = Dropout(0.5)(conv4_3)
+    print("drop4_3: ", drop4_3)
+    print("=========decoder start========")
+    up6 = Conv2DTranspose(256, kernel_size=2, strides=2, padding='same', kernel_initializer='he_normal')(drop4_3)
+    print("up6: ", up6)
+    skip6 = attentionGate(256, up6, conv3)
+    print("skip6: ", skip6)
+    conv6 = DoubleConv(256, skip6)
+    print("conv6: ", conv6)
+
+    up7 = Conv2DTranspose(256, kernel_size=2, strides=2, padding='same', kernel_initializer='he_normal')(conv6)
+    print("up7: ", up7)
+    skip7 = attentionGate(128, up7, conv2)
+    print("skip7: ", skip7)
+    conv7 = DoubleConv(128, skip7)
+    print("conv7: ", conv7)
+
+    up8 = Conv2DTranspose(256, kernel_size=2, strides=2, padding='same', kernel_initializer='he_normal')(conv7)
+    skip8 = attentionGate(64, up8, conv1)
+    conv8 = DoubleConv(64, skip8)
+
+    conv9 = Conv2D(2, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv8)
+    print("conv9: ", conv9)
+    conv10 = Conv2D(1, 1, activation='sigmoid')(conv9)
+    print("conv10: ", conv10)
 
     model = Model(inputs, conv10)
     return model

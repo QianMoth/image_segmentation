@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
 import tensorflow as tf
-from models import MyModel
 
 
 # 图片展示，未来可能会加自动保存、自动关闭
@@ -17,14 +16,14 @@ def display(display_list):
     plt.show()
 
 
-# 展示预测图。问题（注释的部分）
-def show_predictions(checkpoint_save_path, dataset, num=1):
-    MyModel.load_weights(checkpoint_save_path)
-    for image, mask in dataset.take(num):
-        pred_mask = MyModel.predict(image)
-        # pred_mask = tf.argmax(pred_mask, axis=-1)
-        # pred_mask = pred_mask[..., tf.newaxis]
-        display([image[0], mask[0], pred_mask[0]])
+# # 展示预测图。问题（注释的部分）
+# def show_predictions(checkpoint_save_path, dataset, num=1):
+#     MyModel.load_weights(checkpoint_save_path)
+#     for image, mask in dataset.take(num):
+#         pred_mask = MyModel.predict(image)
+#         # pred_mask = tf.argmax(pred_mask, axis=-1)
+#         # pred_mask = pred_mask[..., tf.newaxis]
+#         display([image[0], mask[0], pred_mask[0]])
 
 
 # 准确率和loss曲线
