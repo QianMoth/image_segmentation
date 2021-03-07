@@ -1,7 +1,6 @@
 # 数据集模块
 # 包括载入数据集(自制加载模块)、数据集增强
 
-# https://challenge.isic-archive.com/data    #ISIC皮肤数据集
 
 import tensorflow as tf
 

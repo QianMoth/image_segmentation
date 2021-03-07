@@ -6,8 +6,8 @@
 # 2 作品效果图
 >(代表作品特色的5-10张图)
 
-![segmentation](./img/Figure_10.png)
-![acc_loss](./img/acc_loss_1.png)
+![segmentation](./output/Figure_10.png)
+![acc_loss](./output/acc_loss_1.png)
 # 3 设计思想
 >（栏目可以根据作品特点调整，下面可以再分小点）
 ## 3.1 项目背景

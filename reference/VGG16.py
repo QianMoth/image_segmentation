@@ -3,7 +3,7 @@ import os
 import glob
 import numpy as np
 
-# from tensorflow_examples.models.pix2pix import pix2pix
+# from tensorflow_examples.networks.pix2pix import pix2pix
 import tensorflow_datasets as tfds
 
 tfds.disable_progress_bar()
@@ -75,7 +75,7 @@ def load_image(input_images_path, input_anno_path):
 
 # 构建训练集和测试集，训练集的大小占总数据集的80%,bachsize=8，训练集有样本5912个，测试集有样本1478个。
 
-# dataset = tf.data.Dataset.from_tensor_slices((images, anno))
+# Datasets = tf.data.Datasets.from_tensor_slices((images, anno))
 dataset = tf.data.Dataset.from_tensor_slices((images, anno))
 dataset = dataset.map(load_image, num_parallel_calls=tf.data.experimental.AUTOTUNE)
 # %%设置训练数据和验证集数据的大小

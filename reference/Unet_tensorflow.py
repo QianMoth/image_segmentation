@@ -10,7 +10,7 @@ tfds.disable_progress_bar()
 from IPython.display import clear_output
 import matplotlib.pyplot as plt
 
-# dataset, info = tfds.load('oxford_iiit_pet:3.*.*', with_info=True)
+# Datasets, info = tfds.load('oxford_iiit_pet:3.*.*', with_info=True)
 images_file_path = '..\\..\\DATA\\ISIC2016\\ISBI2016_ISIC_Part1_Training_Data\\*jpg'
 masks_file_path = '..\\..\\DATA\\ISIC2016\\ISBI2016_ISIC_Part1_Training_GroundTruth\\*.png'
 
