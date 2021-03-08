@@ -69,7 +69,7 @@ test_dataset = test.batch(batch_size)
 
 
 # 加载模型, 这样是为了在多个模型的情况下便于修改
-model = myModel.att_QianNet(input_size=(256, 256, 3))
+model = BCDUnet.SEDU_Net_D3(input_size=(256, 256, 3))
 
 # 配置训练方法
 model.compile(optimizer='adam', loss=dice_coef_loss, metrics=["binary_accuracy", dice_coef])

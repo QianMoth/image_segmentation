@@ -31,10 +31,12 @@ from tensorflow.keras.layers import *
 
 def attentionGate(channel, x, g):
     theta_att = Conv2D(channel, 1, strides=1, padding='same', use_bias=True)(x)
-    theta_att = BatchNormalization(axis=3)(theta_att)
+    # theta_att = BatchNormalization(axis=3)(theta_att)
+    # theta_att = LayerNormalization(axis=3)(theta_att)
 
     phi_g = Conv2D(channel, 1, strides=1, padding='same', use_bias=True)(g)
-    phi_g = BatchNormalization(axis=3)(phi_g)
+    # phi_g = BatchNormalization(axis=3)(phi_g)
+    # phi_g = LayerNormalization(axis=3)(phi_g)
 
     query = add([theta_att, phi_g])
     # f = ReLU(inplace=True)(query)
@@ -42,6 +44,7 @@ def attentionGate(channel, x, g):
 
     psi_f = Conv2D(1, 1, strides=1, padding='same', use_bias=True, activation='sigmoid')(f)
     X_att = BatchNormalization(axis=3)(psi_f)
+    # X_att = LayerNormalization(axis=3)(psi_f)
     X_att = multiply([x, X_att])
 
     return X_att
