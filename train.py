@@ -4,7 +4,7 @@ import os
 import data
 import glob
 import numpy as np
-from models.networks import myModel, Unet, BCDUnet
+from models.networks import MyModel, Unet, BCDUnet
 from models.losses import *
 
 import tensorflow as tf

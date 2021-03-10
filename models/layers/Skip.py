@@ -3,33 +3,7 @@ from tensorflow.keras.models import *
 from tensorflow.keras.layers import *
 
 
-# def attentionGate(channel, x, g, activation='ReLU', attention='add'):
-#     activation_func = eval(activation)
-#     attention_func = eval(attention)
-#     # mapping the input tensor to the intermediate channel
-#     theta_att = Conv2D(channel, 1, use_bias=True)(x)
-#     # mapping the gate tensor
-#     phi_g = Conv2D(channel, 1, use_bias=True)(g)
-#     # ----- attention learning ----- #
-#     query = attention_func([theta_att, phi_g])
-#
-#     # nonlinear activation
-#     f = activation_func()(query)
-#
-#     # linear transformation
-#     psi_f = Conv2D(1, 1, use_bias=True)(f)
-#     # ------------------------------ #
-#
-#     # sigmoid activation as attention coefficients
-#     coef_att = Activation('sigmoid')(psi_f)
-#
-#     # multiplicative attention masking
-#     X_att = multiply([x, coef_att])
-#
-#     return X_att
-
-
-def attentionGate(channel, x, g):
+def AttentionGate(channel, x, g):
     theta_att = Conv2D(channel, 1, strides=1, padding='same', use_bias=True)(x)
     # theta_att = BatchNormalization(axis=3)(theta_att)
     # theta_att = LayerNormalization(axis=3)(theta_att)

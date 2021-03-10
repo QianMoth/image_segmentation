@@ -1,10 +1,10 @@
 from tensorflow.keras import Model
 from tensorflow.keras.layers import *
 from models.layers.Conv import DoubleConv
-from models.layers.Skip import BConvLSTMSkip, attentionGate
+from models.layers.Skip import BConvLSTMSkip, AttentionGate
 
 
-def BSC_QianNet(input_size=(256, 256, 1)):
+def BSCUNet_Qian(input_size=(256, 256, 1)):
     # N = input_size[0]
     inputs = Input(input_size)
     conv1 = DoubleConv(64, inputs)
@@ -51,8 +51,8 @@ def BSC_QianNet(input_size=(256, 256, 1)):
     return model
 
 
-def att_QianNet(input_size=(256, 256, 1)):
-    # N = input_size[0]
+def AttentionUNet_Qian(input_size=(256, 256, 1)):
+    print("=========encoder starte========")
     inputs = Input(input_size)
     print("inputs: ", inputs)
     conv1 = DoubleConv(64, inputs)
@@ -70,6 +70,7 @@ def att_QianNet(input_size=(256, 256, 1)):
     pool3 = MaxPooling2D(pool_size=(2, 2))(drop3)
     print("pool3: ", pool3)
     print("=========encoder end========")
+
     # D1
     conv4_1 = DoubleConv(512, pool3)
     drop4_1 = Dropout(0.5)(conv4_1)
@@ -83,27 +84,29 @@ def att_QianNet(input_size=(256, 256, 1)):
     conv4_3 = DoubleConv(512, merge_dense)
     drop4_3 = Dropout(0.5)(conv4_3)
     print("drop4_3: ", drop4_3)
+
     print("=========decoder start========")
     up6 = Conv2DTranspose(256, kernel_size=2, strides=2, padding='same', kernel_initializer='he_normal')(drop4_3)
     print("up6: ", up6)
-    skip6 = attentionGate(256, up6, conv3)
+    skip6 = AttentionGate(256, up6, conv3)
     print("skip6: ", skip6)
     conv6 = DoubleConv(256, skip6)
     print("conv6: ", conv6)
 
     up7 = Conv2DTranspose(256, kernel_size=2, strides=2, padding='same', kernel_initializer='he_normal')(conv6)
     print("up7: ", up7)
-    skip7 = attentionGate(128, up7, conv2)
+    skip7 = AttentionGate(128, up7, conv2)
     print("skip7: ", skip7)
     conv7 = DoubleConv(128, skip7)
     print("conv7: ", conv7)
 
     up8 = Conv2DTranspose(256, kernel_size=2, strides=2, padding='same', kernel_initializer='he_normal')(conv7)
     print("up8: ", up8)
-    skip8 = attentionGate(64, up8, conv1)
+    skip8 = AttentionGate(64, up8, conv1)
     print("skip8: ", skip8)
     conv8 = DoubleConv(64, skip8)
     print("conv8: ", conv8)
+    print("=========decoder end========")
 
     conv9 = Conv2D(2, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv8)
     print("conv9: ", conv9)
