@@ -9,6 +9,7 @@ from models.losses import *
 
 import tensorflow as tf
 from tensorflow.keras import backend
+from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard, ReduceLROnPlateau
 
 # 使用CPU计算
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
@@ -22,22 +23,25 @@ train_masks_file_path = '../Datasets/ISIC2016/ISBI2016_ISIC_Part1_Training_Groun
 test_masks_file_path = '../Datasets/ISIC2016/ISBI2016_ISIC_Part1_Test_GroundTruth/*.png'
 
 # 将官方的训练集与测试集一起加载了
-images_path = glob.glob(train_images_file_path) + glob.glob(test_images_file_path)
-masks_path = glob.glob(train_masks_file_path) + glob.glob(test_masks_file_path)
+# images_path = glob.glob(train_images_file_path) + glob.glob(test_images_file_path)
+# masks_path = glob.glob(train_masks_file_path) + glob.glob(test_masks_file_path)
+# 测试用
+images_path = glob.glob(test_images_file_path)
+masks_path = glob.glob(test_masks_file_path)
 # print(images_path)
 
-train_count = int(len(images_path) * 0.8)  # 80%
-test_count = len(images_path) - train_count  # 20%
+train_count = int(len(images_path) * 0.08)  # 80%
+test_count = int((len(images_path) - train_count) * 0.08)  # 20%
 print('数据集个数:', len(images_path),
       '训练集个数:', train_count, '测试集个数:', test_count)
 # 数据集个数: 1279 训练集个数: 1023 测试集个数: 256
 
 
 # 超参数
-batch_size = 2
+batch_size = 8
 # 公司电脑只能 <= 2 # 最新的模型GPU已经不行了
 # 学校电脑 <=25, 32不行其余没测试过
-epochs = 10
+epochs = 1
 buffer_size = train_count
 steps_per_epoch = train_count // batch_size
 validation_steps = 1
@@ -51,7 +55,7 @@ train = dataset.skip(test_count)
 test = dataset.take(test_count)
 # print(train, test)
 
-train_dataset = train.cache().shuffle(buffer_size).batch(batch_size).repeat()
+train_dataset = train.batch(batch_size).shuffle(buffer_size).cache().repeat()
 train_dataset = train_dataset.prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
 test_dataset = test.batch(batch_size)
 
@@ -69,15 +73,20 @@ test_dataset = test.batch(batch_size)
 
 
 # 加载模型, 这样是为了在多个模型的情况下便于修改
-model = BCDUnet.SEDU_Net_D3(input_size=(256, 256, 3))
+model = MyModel.AttentionUNet_Qian(input_size=(256, 256, 3))
 
-# 配置训练方法
+# build
 model.compile(optimizer='adam', loss=dice_coef_loss, metrics=["binary_accuracy", dice_coef])
-# 训练模型 问题batch size打开会报错
+# mcp_save = ModelCheckpoint('./output/weight_isic18', save_best_only=True, monitor='val_loss', mode='min')
+# reduce_lr_loss = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=7, verbose=1, min_delta=1e-4, mode='min')
+
+# 训练模型
 history = model.fit(train_dataset, epochs=epochs,
                     steps_per_epoch=steps_per_epoch,
                     validation_data=test_dataset,
-                    validation_steps=validation_steps)
+                    validation_steps=validation_steps,
+                    shuffle=True,
+                    verbose=1)
 # 模型结构展示
 model.summary()
 
