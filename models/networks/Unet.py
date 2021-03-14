@@ -10,7 +10,7 @@ class DoubleConv(layers.Layer):
         # self.BN1 = layers.BatchNormalization(axis=3)
         self.conv2 = layers.Conv2D(filter_size, 3, padding='same', activation='relu')
         self.BN2 = layers.BatchNormalization(axis=3)
-        self.drop = layers.Dropout(0.5)
+        self.drop = layers.Dropout(0.2)
 
     def call(self, inputs, training=None, **kwargs):
         l = self.conv1(inputs)

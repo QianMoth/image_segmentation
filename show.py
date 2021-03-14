@@ -20,11 +20,11 @@ def display_sample(display_list):
 
 # 展示预测图。问题（注释的部分）
 def show_predictions(path, dataset, num=1):
-    model = models.load_model(path, custom_objects={'dice_coef_loss': dice_coef_loss,
-                                                    'dice_coef': dice_coef})
+    model = models.load_model(path, custom_objects={'dice_coef_loss': dice_coef_loss, 'dice_coef': dice_coef,
+                                                    'f1_scores': f1_scores, 'precision_m': precision_m,
+                                                    'recall_m': recall_m})
     for image, mask in dataset.take(num):
         pred_mask = model.predict(image)
         # pred_mask = tf.argmax(pred_mask, axis=-1)
         # pred_mask = pred_mask[..., tf.newaxis]
         display_sample([image[0], mask[0], pred_mask[0]])
-
