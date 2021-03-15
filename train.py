@@ -27,19 +27,17 @@ test_images_file_path = '../Datasets/ISIC2016/ISBI2016_ISIC_Part1_Test_Data/*jpg
 train_masks_file_path = '../Datasets/ISIC2016/ISBI2016_ISIC_Part1_Training_GroundTruth/*.png'
 test_masks_file_path = '../Datasets/ISIC2016/ISBI2016_ISIC_Part1_Test_GroundTruth/*.png'
 
-images_path = glob.glob(train_images_file_path)
-# + glob.glob(test_images_file_path)
-masks_path = glob.glob(train_masks_file_path)
-# + glob.glob(test_masks_file_path)
+images_path = glob.glob(train_images_file_path)  # + glob.glob(test_images_file_path)
+masks_path = glob.glob(train_masks_file_path)  # + glob.glob(test_masks_file_path)
 
 train_count = int(len(images_path) * 0.8)  # 80%
 val_count = len(images_path) - train_count  # 20%
 
-# /////////// 测试用,请注释 ///////////
-os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"  # 使用CPU计算
-# train_count = int(train_count * 0.01)
-# val_count = int(val_count * 0.01)
+# # /////////// 测试用,请注释 ///////////
+# os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+# os.environ["CUDA_VISIBLE_DEVICES"] = "-1"  # 使用CPU计算
+# # train_count = int(train_count * 0.01)
+# # val_count = int(val_count * 0.01)
 
 print('数据集个数:', len(images_path),
       '训练集个数:', train_count, '测试集个数:', val_count)
@@ -47,16 +45,16 @@ print('数据集个数:', len(images_path),
 
 # //////////////////////////////////////////////////////////
 # 加载模型, 这样是为了在多个模型的情况下便于修改
-model = MyModel.UNet(input_size=(256, 256, 3))
-model_name = 'Unet'
+# model = MyModel.UNet(input_size=(256, 256, 3))
+# model_name = 'Unet'
 # model = MyModel.AttentionUNet(input_size=(256, 256, 3))
 # model_name = 'AttUnet'
 # model = BCDUnet.BCDU_net_D3(input_size=(256, 256, 3))
 # model_name = 'BCDUnet'
 # model = MyModel.ADUNet_L5(input_size=(256, 256, 3))
 # model_name = 'ADUnet_L5'
-# model = MyModel.ADUNet_L4(input_size=(256, 256, 3))
-# model_name = 'ADUnet_L4'
+model = MyModel.ADUNet_L4(input_size=(256, 256, 3))
+model_name = 'ADUnet_L4'
 
 # 超参数
 BATCH_SIZE = 2
@@ -81,17 +79,6 @@ val_dataset = val.batch(BATCH_SIZE)
 # test:   <TakeDataset shapes: ((256, 256, 3), (256, 256, 1)), types: (tf.float32, tf.float32)>
 # train_dataset:  <PrefetchDataset shapes: ((None, 256, 256, 3), (None, 256, 256, 1)), types: (tf.float32, tf.float32)>
 # test_dataset:   <BatchDataset shapes: ((None, 256, 256, 3), (None, 256, 256, 1)), types: (tf.float32, tf.float32)>
-
-# 数据增强
-train_dataset = train_dataset.reshape(train_dataset.shape[0], 256, 256, 3)
-image_gen_train = tf.keras.preprocessing.image.ImageDataGenerator(
-    rescale=1. / 1.,  # 归一化
-    rotation_range=45,  # 随机90°旋转
-    width_shift_range=.15,  # 宽度偏移
-    height_shift_range=.15,
-    horizontal_flip=False,
-    zoom_range=0.5)  # 随机缩放阈量50%
-image_gen_train.fit(train_dataset)
 
 # # 看一下数据加载是否正常
 # sample_image, sample_mask = [], []

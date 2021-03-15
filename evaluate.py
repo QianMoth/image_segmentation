@@ -53,4 +53,4 @@ model = models.load_model(save_model_path, custom_objects={'dice_coef_loss': dic
 result = model.evaluate(test_dataset)
 
 # 不同图片展示
-# show.show_predictions(save_model_path, test_dataset, num=5)
+show.show_predictions(save_model_path, test_dataset, num=5)
