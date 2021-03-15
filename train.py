@@ -3,23 +3,17 @@
 import os
 import data
 import glob
-import h5py
 import numpy as np
 from models.networks import MyModel, Unet, BCDUnet
 from models.losses import *
 
 import tensorflow as tf
-from tensorflow.keras import models, layers
-from tensorflow.keras import metrics, optimizers, losses
-from tensorflow.keras import backend as K
-from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.callbacks import EarlyStopping
-from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard, ReduceLROnPlateau
+from tensorflow.keras.optimizers import *
+from tensorflow.keras.callbacks import *
 
 # 可视化
 import show
 from random import randint
-from IPython.display import SVG
 import IPython.display as display
 from IPython.display import clear_output
 from tensorflow.keras.utils import plot_model, model_to_dot
@@ -27,30 +21,28 @@ import matplotlib.pyplot as plt
 
 print("tensorflow 版本: " + tf.version.VERSION)
 
-# 使用CPU计算
-os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-
 # load datasets
-# 修改了文件夹的内容，文件夹内包含所有数据集。
 train_images_file_path = '../Datasets/ISIC2016/ISBI2016_ISIC_Part1_Training_Data/*jpg'
 test_images_file_path = '../Datasets/ISIC2016/ISBI2016_ISIC_Part1_Test_Data/*jpg'
 train_masks_file_path = '../Datasets/ISIC2016/ISBI2016_ISIC_Part1_Training_GroundTruth/*.png'
 test_masks_file_path = '../Datasets/ISIC2016/ISBI2016_ISIC_Part1_Test_GroundTruth/*.png'
 
-# 将官方的训练集与测试集一起加载了
-images_path = glob.glob(train_images_file_path) + glob.glob(test_images_file_path)
-masks_path = glob.glob(train_masks_file_path) + glob.glob(test_masks_file_path)
+images_path = glob.glob(train_images_file_path)
+# + glob.glob(test_images_file_path)
+masks_path = glob.glob(train_masks_file_path)
+# + glob.glob(test_masks_file_path)
 
 train_count = int(len(images_path) * 0.8)  # 80%
-test_count = len(images_path) - train_count  # 20%
+val_count = len(images_path) - train_count  # 20%
 
-# 测试用
-train_count = int(train_count * 0.01)
-test_count = int(test_count * 0.01)
+# /////////// 测试用,请注释 ///////////
+os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"  # 使用CPU计算
+# train_count = int(train_count * 0.01)
+# val_count = int(val_count * 0.01)
 
 print('数据集个数:', len(images_path),
-      '训练集个数:', train_count, '测试集个数:', test_count)
+      '训练集个数:', train_count, '测试集个数:', val_count)
 # 数据集个数: 1279 训练集个数: 1023 测试集个数: 256
 
 # //////////////////////////////////////////////////////////
@@ -68,7 +60,7 @@ model_name = 'Unet'
 
 # 超参数
 BATCH_SIZE = 2
-EPOCHS = 3
+EPOCHS = 30
 BUFFER_SIZE = train_count
 STEPS_PER_EPOCH = train_count // BATCH_SIZE
 VALIDATION_STEPS = 1
@@ -76,18 +68,30 @@ VALIDATION_STEPS = 1
 
 # 打乱数据集，重写
 dataset = tf.data.Dataset.from_tensor_slices((images_path, masks_path))
+
 dataset = dataset.map(data.load_image_train, num_parallel_calls=tf.data.experimental.AUTOTUNE)
 # 跳过test_count个
-train = dataset.skip(test_count)
-test = dataset.take(test_count)
+train = dataset.skip(val_count)
+val = dataset.take(val_count)
 # print(train, test)
 train_dataset = train.batch(BATCH_SIZE).shuffle(BUFFER_SIZE).cache().repeat()
 train_dataset = train_dataset.prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
-test_dataset = test.batch(BATCH_SIZE)
+val_dataset = val.batch(BATCH_SIZE)
 # train:  <SkipDataset shapes: ((256, 256, 3), (256, 256, 1)), types: (tf.float32, tf.float32)>
 # test:   <TakeDataset shapes: ((256, 256, 3), (256, 256, 1)), types: (tf.float32, tf.float32)>
 # train_dataset:  <PrefetchDataset shapes: ((None, 256, 256, 3), (None, 256, 256, 1)), types: (tf.float32, tf.float32)>
 # test_dataset:   <BatchDataset shapes: ((None, 256, 256, 3), (None, 256, 256, 1)), types: (tf.float32, tf.float32)>
+
+# 数据增强
+train_dataset = train_dataset.reshape(train_dataset.shape[0], 256, 256, 3)
+image_gen_train = tf.keras.preprocessing.image.ImageDataGenerator(
+    rescale=1. / 1.,  # 归一化
+    rotation_range=45,  # 随机90°旋转
+    width_shift_range=.15,  # 宽度偏移
+    height_shift_range=.15,
+    horizontal_flip=False,
+    zoom_range=0.5)  # 随机缩放阈量50%
+image_gen_train.fit(train_dataset)
 
 # # 看一下数据加载是否正常
 # sample_image, sample_mask = [], []
@@ -121,7 +125,7 @@ cp_callback = ModelCheckpoint(save_model_path, verbose=1, save_best_only=True)  
 class DisplayCallback(tf.keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs=None):
         # clear_output(wait=True)  # 每次输出图像前关闭上一次
-        show.show_predictions(save_model_path, test_dataset)
+        show.show_predictions(save_model_path, val_dataset)
         # print('\nSample Prediction after epoch {}\n'.format(epoch + 1))
 
 
@@ -132,7 +136,7 @@ history = model.fit(train_dataset, epochs=EPOCHS,
                     # validation_split=0.2,  # 使用的验证数据将是最后 20％ 的数据。
 
                     steps_per_epoch=STEPS_PER_EPOCH,
-                    validation_data=test_dataset,
+                    validation_data=val_dataset,
                     validation_steps=VALIDATION_STEPS,
 
                     callbacks=[
@@ -201,7 +205,7 @@ plt.grid()
 plt.legend()
 
 plt.subplot(2, 2, 4)
-plt.plot(lr, '>-', label="Learning Rate")
+plt.plot(lr, 'o-', label="Learning Rate")
 plt.title("lr")
 plt.xlabel('Epoch')
 plt.ylabel('lr Value')
@@ -210,6 +214,3 @@ plt.grid()
 plt.legend()
 
 plt.show()
-
-# 不同图片展示
-show.show_predictions(save_model_path, test_dataset, num=3)
