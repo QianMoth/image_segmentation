@@ -36,8 +36,8 @@ val_count = len(images_path) - train_count  # 20%
 # # /////////// 测试用,请注释 ///////////
 # os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 # os.environ["CUDA_VISIBLE_DEVICES"] = "-1"  # 使用CPU计算
-# # train_count = int(train_count * 0.01)
-# # val_count = int(val_count * 0.01)
+train_count = int(train_count * 0.05)
+val_count = int(val_count * 0.05)
 
 print('数据集个数:', len(images_path),
       '训练集个数:', train_count, '测试集个数:', val_count)
@@ -58,7 +58,7 @@ model_name = 'ADUnet_L4'
 
 # 超参数
 BATCH_SIZE = 2
-EPOCHS = 30
+EPOCHS = 5
 BUFFER_SIZE = train_count
 STEPS_PER_EPOCH = train_count // BATCH_SIZE
 VALIDATION_STEPS = 1
@@ -90,9 +90,7 @@ val_dataset = val.batch(BATCH_SIZE)
 # -----------------------------------------------------------------------------
 
 # save path
-save_model = model_name + '.h5'
-save_dir = os.path.join(os.getcwd(), 'output')
-save_model_path = os.path.join(save_dir, save_model)
+save_model_path = 'output/' + model_name + '.h5'
 # # 模型结构
 # plot_model(model, to_file=os.path.join(save_dir, model_name + '_MODEL.png'))
 
