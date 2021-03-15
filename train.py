@@ -27,10 +27,9 @@ import matplotlib.pyplot as plt
 
 print("tensorflow 版本: " + tf.version.VERSION)
 
-# # 使用CPU计算
-# os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-# os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-
+# 使用CPU计算
+os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 # load datasets
 # 修改了文件夹的内容，文件夹内包含所有数据集。
@@ -42,33 +41,34 @@ test_masks_file_path = '../Datasets/ISIC2016/ISBI2016_ISIC_Part1_Test_GroundTrut
 # 将官方的训练集与测试集一起加载了
 images_path = glob.glob(train_images_file_path) + glob.glob(test_images_file_path)
 masks_path = glob.glob(train_masks_file_path) + glob.glob(test_masks_file_path)
-# # 测试用
-# images_path = glob.glob(test_images_file_path)
-# masks_path = glob.glob(test_masks_file_path)
-# # print(images_path)
 
 train_count = int(len(images_path) * 0.8)  # 80%
 test_count = len(images_path) - train_count  # 20%
+
+# 测试用
+train_count = int(train_count * 0.01)
+test_count = int(test_count * 0.01)
+
 print('数据集个数:', len(images_path),
       '训练集个数:', train_count, '测试集个数:', test_count)
 # 数据集个数: 1279 训练集个数: 1023 测试集个数: 256
 
 # //////////////////////////////////////////////////////////
 # 加载模型, 这样是为了在多个模型的情况下便于修改
-# model = MyModel.UNet(input_size=(256, 256, 3))
-# model_name = 'Unet'
+model = MyModel.UNet(input_size=(256, 256, 3))
+model_name = 'Unet'
 # model = MyModel.AttentionUNet(input_size=(256, 256, 3))
 # model_name = 'AttUnet'
 # model = BCDUnet.BCDU_net_D3(input_size=(256, 256, 3))
 # model_name = 'BCDUnet'
-model = MyModel.ADUNet_L5(input_size=(256, 256, 3))
-model_name = 'ADUnet_L5'
+# model = MyModel.ADUNet_L5(input_size=(256, 256, 3))
+# model_name = 'ADUnet_L5'
 # model = MyModel.ADUNet_L4(input_size=(256, 256, 3))
 # model_name = 'ADUnet_L4'
 
 # 超参数
 BATCH_SIZE = 2
-EPOCHS = 30
+EPOCHS = 3
 BUFFER_SIZE = train_count
 STEPS_PER_EPOCH = train_count // BATCH_SIZE
 VALIDATION_STEPS = 1
@@ -84,16 +84,10 @@ test = dataset.take(test_count)
 train_dataset = train.batch(BATCH_SIZE).shuffle(BUFFER_SIZE).cache().repeat()
 train_dataset = train_dataset.prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
 test_dataset = test.batch(BATCH_SIZE)
-
 # train:  <SkipDataset shapes: ((256, 256, 3), (256, 256, 1)), types: (tf.float32, tf.float32)>
 # test:   <TakeDataset shapes: ((256, 256, 3), (256, 256, 1)), types: (tf.float32, tf.float32)>
 # train_dataset:  <PrefetchDataset shapes: ((None, 256, 256, 3), (None, 256, 256, 1)), types: (tf.float32, tf.float32)>
 # test_dataset:   <BatchDataset shapes: ((None, 256, 256, 3), (None, 256, 256, 1)), types: (tf.float32, tf.float32)>
-
-# for i, _ in enumerate(test_dataset.element_spec):
-#     test_dataset_i = test_dataset.map(lambda *args: args[i]).map(tf.io.serialize_tensor)
-#     writer = tf.data.experimental.TFRecordWriter(f'output/mydata_{i}.tfrecord')
-#     writer.write(test_dataset_i)
 
 # # 看一下数据加载是否正常
 # sample_image, sample_mask = [], []
@@ -101,24 +95,18 @@ test_dataset = test.batch(BATCH_SIZE)
 #     sample_image, sample_mask = image, mask
 # show.display_sample([sample_image, sample_mask])
 
-# #　模型加载
-# checkpoint_save_path = 'output/ADUNet_Qian.h5'
-# if os.path.exists(checkpoint_save_path):
-#     print('-------------下载模型-------------')
-#     model = models.load_model(checkpoint_save_path,
-#                               custom_objects={'dice_coef_loss': dice_coef_loss,
-#                                               'dice_coef': dice_coef})
+
+# -----------------------------------------------------------------------------
 
 # save path
 save_model = model_name + '.h5'
 save_dir = os.path.join(os.getcwd(), 'output')
 save_model_path = os.path.join(save_dir, save_model)
-
-# 模型结构
-plot_model(model, to_file=os.path.join(save_dir, model_name + '_MODEL.png'))
+# # 模型结构
+# plot_model(model, to_file=os.path.join(save_dir, model_name + '_MODEL.png'))
 
 # build
-# 评价函数和 损失函数 相似，只不过评价函数的结果不会用于训练过程中。
+# 评价函数 和 损失函数 相似, 只不过评价函数的结果不会用于训练过程中
 model.compile(optimizer=Adam(lr=1e-4),
               # loss='binary_crossentropy',
               loss=dice_coef_loss,
@@ -158,36 +146,69 @@ history = model.fit(train_dataset, epochs=EPOCHS,
 # # 模型结构展示
 # model.summary()
 
+# -----------------------------------------------------------------------------
+
 # 可视化
 print(history.history.keys())
 dice_coef = history.history['dice_coef']
+binary_accuracy = history.history['binary_accuracy']
+f1_scores = history.history['f1_scores']
+precision_m = history.history['precision_m']
+recall_m = history.history['recall_m']
+
 val_dice_coef = history.history['val_dice_coef']
-# val_f1_scores = history.history['f1_scores']
-# val_binary_accuracy = history.history['binary_accuracy']
-# val_precision_m = history.history['precision_m']
-# val_recall_m = history.history['recall_m']
+val_binary_accuracy = history.history['val_binary_accuracy']
+val_f1_scores = history.history['val_f1_scores']
+val_precision_m = history.history['val_precision_m']
+val_recall_m = history.history['val_recall_m']
+
+lr = history.history['lr']
 
 loss = history.history['loss']
 val_loss = history.history['val_loss']
 
-# 绘制训练 & 验证的准确率值
-plt.subplot(1, 2, 1)
-plt.plot(dice_coef, label="dice_coef")
-plt.plot(val_dice_coef, label="val_dice_coef")
+plt.subplot(2, 1, 1)
+plt.plot(dice_coef, 'o-', label="dice_coef", color='#d7191c')
+plt.plot(val_dice_coef, 'o--', label="val_dice_coef", color='#d7191c')
+
+plt.plot(binary_accuracy, '^-', label="binary_accuracy", color='#fdae61')
+plt.plot(val_binary_accuracy, '^--', label="val_binary_accuracy", color='#fdae61')
+
+plt.plot(f1_scores, 's-', label="f1_scores", color='#abdda4')
+plt.plot(val_f1_scores, 's--', label="val_f1_scores", color='#abdda4')
+
+plt.plot(precision_m, 'p-', label="precision", color='#2b83ba')
+plt.plot(val_precision_m, 'p--', label="val_precision", color='#2b83ba')
+
+plt.plot(recall_m, '<-', label="recall", color='#5e4fa2')
+plt.plot(val_recall_m, '<--', label="val_recall", color='#5e4fa2')
+
 plt.title("Accuracy")
 plt.xlabel('Epoch')
 plt.ylabel('Accuracy Value')
 plt.ylim([0, 1])
+plt.grid()
 plt.legend()
-# 绘制训练 & 验证的损失值
-plt.subplot(1, 2, 2)
-plt.plot(loss, label="Training Loss")
-plt.plot(val_loss, label="Validation Loss")
+
+plt.subplot(2, 2, 3)
+plt.plot(loss, 'x-', label="Training Loss")
+plt.plot(val_loss, 'x--', label="Validation Loss")
 plt.title("loss")
 plt.xlabel('Epoch')
 plt.ylabel('Loss Value')
 plt.ylim([0, 1])
+plt.grid()
 plt.legend()
+
+plt.subplot(2, 2, 4)
+plt.plot(lr, '>-', label="Learning Rate")
+plt.title("lr")
+plt.xlabel('Epoch')
+plt.ylabel('lr Value')
+# plt.ylim([0, 1])
+plt.grid()
+plt.legend()
+
 plt.show()
 
 # 不同图片展示

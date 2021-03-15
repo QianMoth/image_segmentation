@@ -1,8 +1,13 @@
 import numpy as np
 import tensorflow as tf
+
 from tensorflow.keras import Model
-from tensorflow.keras.layers import *
 from tensorflow.keras import backend as K
+
+from tensorflow.keras.layers import *
+from tensorflow.keras.optimizers import Adam
+
+from models.losses import *
 from models.layers.Conv import DoubleConv
 from models.layers.Skip import BConvLSTMSkip
 
@@ -78,7 +83,6 @@ def BCDU_net_D3(input_size=(256, 256, 1)):
     conv9 = Conv2D(1, 1, activation='sigmoid')(conv8)
 
     model = Model(inputs, conv9)
-    # model.compile(optimizer=Adam(lr=1e-4), loss='binary_crossentropy', metrics=['accuracy'])
     return model
 
 
@@ -147,7 +151,6 @@ def BCDU_net_D1(input_size=(256, 256, 1)):
     conv9 = Conv2D(1, 1, activation='sigmoid')(conv8)
 
     model = Model(inputs, conv9)
-    # model.compile(optimizer=Adam(lr=1e-4), loss='binary_crossentropy', metrics=['accuracy'])
     return model
 
 
@@ -296,7 +299,8 @@ def SEDU_Net_D3(input_size=(256, 256, 1), learning_rate=1e-4):
     model = Model(img_input, conv9)
     model.load_weights(weights_path, by_name=True)
 
-    # model.compile(optimizer=Adam(lr=learning_rate), loss='binary_crossentropy', metrics=['accuracy'])
+    model.compile(optimizer=Adam(lr=learning_rate), loss='binary_crossentropy',
+                  metrics=[dice_coef, 'binary_accuracy', f1_scores, precision_m, recall_m])
     return model
 
 # R. Azad, M. Asadi, Mahmood Fathy and Sergio Escalera
