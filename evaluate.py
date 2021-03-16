@@ -7,6 +7,7 @@ from models.losses import *
 
 import tensorflow as tf
 from tensorflow.keras import models, layers
+from tensorflow.keras import backend as K
 
 # 可视化
 import show
@@ -28,23 +29,24 @@ print('测试集个数:', len(images_path))  # 测试集个数: 379
 # 加载模型, 这样是为了在多个模型的情况下便于修改
 # model_name = 'Unet'
 # model_name = 'AttUnet'
-model_name = 'BCDUnet'
-# model_name = 'ADUnet_L5'
+# model_name = 'BCDUnet'
+model_name = 'ADUnet_L5'
 # model_name = 'ADUnet_L4'
 # //////////////////////////////////////////////////////////
 BATCH_SIZE = 2
 dataset = tf.data.Dataset.from_tensor_slices((images_path, masks_path))
 dataset = dataset.map(data.load_image_train, num_parallel_calls=tf.data.experimental.AUTOTUNE)
-test_dataset = dataset.batch(BATCH_SIZE)
+test_dataset = dataset.batch(1)
 # x_train = list(map(lambda x: x[1], dataset))
 # y_train = list(map(lambda x: x[1], dataset))
 
 # -----------------------------------------------------------
+K.set_learning_phase(0)
+print(K.learning_phase())
 
 # save path
-save_model = model_name + '.h5'
-save_dir = os.path.join(os.getcwd(), 'output')
-save_model_path = os.path.join(save_dir, save_model)
+save_model_path = 'output/' + model_name + '.h5'
+# save_model_path = 'C:/Users/ynadmin/Desktop/实验结果保存/ADUnet_L4_0.2_2.h5'
 
 model = models.load_model(save_model_path, custom_objects={'dice_coef_loss': dice_coef_loss, 'dice_coef': dice_coef,
                                                            'f1_scores': f1_scores, 'precision_m': precision_m,
@@ -53,4 +55,4 @@ model = models.load_model(save_model_path, custom_objects={'dice_coef_loss': dic
 result = model.evaluate(test_dataset)
 
 # 不同图片展示
-show.show_predictions(save_model_path, test_dataset, num=5)
+show.show_predictions(save_model_path, test_dataset, num=10)

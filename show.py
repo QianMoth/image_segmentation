@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 from models.losses import *
 from tensorflow.keras import models
+from tensorflow.keras import backend as K
 
 
 # 图片展示，未来可能会加自动保存、自动关闭
@@ -20,6 +21,7 @@ def display_sample(display_list):
 
 # 展示预测图。问题（注释的部分）
 def show_predictions(path, dataset, num=1):
+    K.set_learning_phase(0)
     model = models.load_model(path, custom_objects={'dice_coef_loss': dice_coef_loss, 'dice_coef': dice_coef,
                                                     'f1_scores': f1_scores, 'precision_m': precision_m,
                                                     'recall_m': recall_m})
@@ -28,3 +30,5 @@ def show_predictions(path, dataset, num=1):
         # pred_mask = tf.argmax(pred_mask, axis=-1)
         # pred_mask = pred_mask[..., tf.newaxis]
         display_sample([image[0], mask[0], pred_mask[0]])
+
+    K.set_learning_phase(1)

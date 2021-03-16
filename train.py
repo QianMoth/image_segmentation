@@ -36,8 +36,8 @@ val_count = len(images_path) - train_count  # 20%
 # # /////////// 测试用,请注释 ///////////
 # os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 # os.environ["CUDA_VISIBLE_DEVICES"] = "-1"  # 使用CPU计算
-train_count = int(train_count * 0.05)
-val_count = int(val_count * 0.05)
+# train_count = int(train_count * 0.05)
+# val_count = int(val_count * 0.05)
 
 print('数据集个数:', len(images_path),
       '训练集个数:', train_count, '测试集个数:', val_count)
@@ -57,8 +57,8 @@ model = MyModel.ADUNet_L4(input_size=(256, 256, 3))
 model_name = 'ADUnet_L4'
 
 # 超参数
-BATCH_SIZE = 2
-EPOCHS = 5
+BATCH_SIZE = 1
+EPOCHS = 100
 BUFFER_SIZE = train_count
 STEPS_PER_EPOCH = train_count // BATCH_SIZE
 VALIDATION_STEPS = 1
@@ -127,7 +127,7 @@ history = model.fit(train_dataset, epochs=EPOCHS,
                     callbacks=[
                         early_stopping,
                         cp_callback,
-                        DisplayCallback(),
+                        # DisplayCallback(),
                         reduce_lr
                     ],
                     verbose=1)
