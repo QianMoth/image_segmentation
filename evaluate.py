@@ -30,13 +30,13 @@ print('测试集个数:', len(images_path))  # 测试集个数: 379
 # model_name = 'Unet'
 # model_name = 'AttUnet'
 # model_name = 'BCDUnet'
-model_name = 'ADUnet_L5'
-# model_name = 'ADUnet_L4'
+# model_name = 'ADUnet_L5'
+model_name = 'ADUnet_L4'
 # //////////////////////////////////////////////////////////
 BATCH_SIZE = 2
 dataset = tf.data.Dataset.from_tensor_slices((images_path, masks_path))
 dataset = dataset.map(data.load_image_train, num_parallel_calls=tf.data.experimental.AUTOTUNE)
-test_dataset = dataset.batch(1)
+test_dataset = dataset.batch(BATCH_SIZE)
 # x_train = list(map(lambda x: x[1], dataset))
 # y_train = list(map(lambda x: x[1], dataset))
 
@@ -46,7 +46,6 @@ print(K.learning_phase())
 
 # save path
 save_model_path = 'output/' + model_name + '.h5'
-# save_model_path = 'C:/Users/ynadmin/Desktop/实验结果保存/ADUnet_L4_0.2_2.h5'
 
 model = models.load_model(save_model_path, custom_objects={'dice_coef_loss': dice_coef_loss, 'dice_coef': dice_coef,
                                                            'f1_scores': f1_scores, 'precision_m': precision_m,

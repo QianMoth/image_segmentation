@@ -57,7 +57,7 @@ model = MyModel.ADUNet_L4(input_size=(256, 256, 3))
 model_name = 'ADUnet_L4'
 
 # 超参数
-BATCH_SIZE = 1
+BATCH_SIZE = 2
 EPOCHS = 100
 BUFFER_SIZE = train_count
 STEPS_PER_EPOCH = train_count // BATCH_SIZE
@@ -101,7 +101,7 @@ model.compile(optimizer=Adam(lr=1e-4),
               loss=dice_coef_loss,
               metrics=[dice_coef, 'binary_accuracy', f1_scores, precision_m, recall_m])
 
-early_stopping = EarlyStopping(monitor='val_loss', patience=7)  # 在验证集的误差不再下降时，中断训练
+early_stopping = EarlyStopping(monitor='val_loss', patience=11)  # 在验证集的误差不再下降时，中断训练
 reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.3, patience=2, verbose=1,
                               min_delta=1e-4)  # 当标准评估停止提升时，降低学习速率
 cp_callback = ModelCheckpoint(save_model_path, verbose=1, save_best_only=True)  # 保存模型
@@ -126,7 +126,7 @@ history = model.fit(train_dataset, epochs=EPOCHS,
 
                     callbacks=[
                         early_stopping,
-                        cp_callback,
+                        # cp_callback,
                         # DisplayCallback(),
                         reduce_lr
                     ],
