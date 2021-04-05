@@ -27,18 +27,16 @@ print('测试集个数:', len(images_path))  # 测试集个数: 379
 
 # //////////////////////////////////////////////////////////
 # 加载模型, 这样是为了在多个模型的情况下便于修改
-# model_name = 'Unet'
-# model_name = 'AttUnet'
-# model_name = 'BCDUnet'
-# model_name = 'ADUnet_L5'
-model_name = 'ADUnet_L4'
+model_name = 'Unet_0.0429'
+# model_name = 'AttUnet_0.0568'
+# model_name = 'BCDUnet_0.0905'
+# model_name = 'ADUnet_L5_0.0327'
+# model_name = 'ADUnet_L4_0.031'
 # //////////////////////////////////////////////////////////
-BATCH_SIZE = 2
+BATCH_SIZE = 1
 dataset = tf.data.Dataset.from_tensor_slices((images_path, masks_path))
 dataset = dataset.map(data.load_image_train, num_parallel_calls=tf.data.experimental.AUTOTUNE)
 test_dataset = dataset.batch(BATCH_SIZE)
-# x_train = list(map(lambda x: x[1], dataset))
-# y_train = list(map(lambda x: x[1], dataset))
 
 # -----------------------------------------------------------
 K.set_learning_phase(0)
